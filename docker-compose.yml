@@ -1,0 +1,39 @@
+# Environnement complet : PostgreSQL, API NestJS et interface React.
+#   docker compose up --build
+#   docker compose exec -e NODE_ENV=development api npx tsx prisma/seed.ts   (données de démo)
+# Interface -> http://localhost:8080   API -> http://localhost:4100/api
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: fixmycity
+      POSTGRES_PASSWORD: fixmycity
+      POSTGRES_DB: fixmycity
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fixmycity"]
+      interval: 5s
+      retries: 10
+
+  api:
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    environment:
+      DATABASE_URL: postgresql://fixmycity:fixmycity@postgres:5432/fixmycity
+      JWT_ACCESS_SECRET: change-me
+      WEB_ORIGIN: http://localhost:8080
+    ports: ["4100:4100"]
+    volumes: [uploads:/data/uploads]
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args: { VITE_API_URL: "http://localhost:4100/api" }
+    ports: ["8080:80"]
+    depends_on: [api]
+
+volumes:
+  pgdata:
+  uploads:

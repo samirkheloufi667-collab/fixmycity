@@ -1,0 +1,119 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/bricolage-grotesque';
+@import 'leaflet/dist/leaflet.css';
+
+/*
+ * Identité « civique » : papier chaud, encre vert sombre, un orange réservé à
+ * l'action principale (signaler). Les couleurs de statut sont les mêmes
+ * partout : carte, badges, graphiques.
+ */
+@theme {
+  --color-paper: #f6f3ec;
+  --color-paper-2: #efeae0;
+  --color-card: #ffffff;
+  --color-ink: #15201c;
+  --color-muted: #5f6b66;
+  --color-faint: #8c958f;
+  --color-line: #e4ded2;
+  --color-line-strong: #d3cbbb;
+
+  --color-brand: #0f6e5a;
+  --color-brand-strong: #0b5646;
+  --color-brand-soft: #dcefe8;
+  --color-accent: #f0642d;
+  --color-accent-strong: #d9521f;
+  --color-accent-soft: #fde7dc;
+  --color-danger: #c2410c;
+
+  --color-st-new: #3b6fd9;
+  --color-st-ack: #7a5ae0;
+  --color-st-progress: #d98a1b;
+  --color-st-resolved: #1e9a6a;
+  --color-st-rejected: #8a8f98;
+
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', 'Inter Variable', ui-sans-serif, sans-serif;
+
+  --shadow-card: 0 1px 2px rgb(21 32 28 / 0.04), 0 8px 24px -12px rgb(21 32 28 / 0.12);
+}
+
+html {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-sans);
+  min-height: 100svh;
+}
+
+::selection {
+  background: var(--color-brand-soft);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+/* Carte : la police et les couleurs de l'application, pas celles de Leaflet. */
+.leaflet-container {
+  font-family: var(--font-sans);
+  background: var(--color-paper-2);
+}
+/* Fond OpenStreetMap adouci : les épingles colorées ressortent mieux. */
+.leaflet-tile-pane {
+  filter: saturate(0.55) contrast(0.95) brightness(1.04);
+}
+.leaflet-popup-content-wrapper {
+  border-radius: 14px;
+  box-shadow: var(--shadow-card);
+}
+.leaflet-popup-content {
+  margin: 12px 14px;
+}
+.leaflet-control-attribution {
+  font-size: 10px;
+}
+
+/* Épingle d'un signalement (voir components/map/pins.ts). */
+.fmc-pin {
+  background: transparent;
+  border: 0;
+}
+.fmc-pin > span {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50% 50% 50% 4px;
+  transform: rotate(-45deg);
+  border: 2px solid #fff;
+  box-shadow: 0 4px 12px -4px rgb(21 32 28 / 0.45);
+  transition: transform 0.15s ease;
+}
+.fmc-pin > span > svg {
+  transform: rotate(45deg);
+  width: 15px;
+  height: 15px;
+  color: #fff;
+}
+.fmc-pin.is-closed > span {
+  opacity: 0.55;
+  filter: grayscale(0.35);
+}
+.fmc-pin.is-active > span {
+  transform: rotate(-45deg) scale(1.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

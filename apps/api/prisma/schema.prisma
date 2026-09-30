@@ -1,0 +1,131 @@
+// Modèle de données de FixMyCity.
+// Un habitant signale un problème géolocalisé ; les agents de la ville le
+// prennent en charge ; chaque étape laisse une trace dans l'historique.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CITIZEN // habitant : signale, soutient, commente
+  AGENT // agent de la ville : prend en charge et fait avancer les signalements
+  ADMIN // administrateur : tout, dont l'attribution et la gestion des rôles
+}
+
+enum ReportStatus {
+  NEW // reçu, pas encore examiné
+  ACKNOWLEDGED // examiné et accepté par la ville
+  IN_PROGRESS // intervention en cours
+  RESOLVED // problème réglé
+  REJECTED // hors compétence, doublon ou non fondé (motif obligatoire)
+}
+
+enum EventType {
+  CREATED
+  STATUS_CHANGED
+  ASSIGNED
+  COMMENT
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         Role     @default(CITIZEN)
+  createdAt    DateTime @default(now())
+
+  reports       Report[]       @relation("ReportAuthor")
+  assigned      Report[]       @relation("ReportAssignee")
+  supports      Support[]
+  events        ReportEvent[]
+  refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  familyId  String
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([familyId])
+}
+
+model Category {
+  id      String   @id @default(cuid())
+  slug    String   @unique
+  name    String
+  color   String
+  icon    String
+  reports Report[]
+}
+
+model Report {
+  id           String       @id @default(cuid())
+  title        String
+  description  String
+  status       ReportStatus @default(NEW)
+  latitude     Float
+  longitude    Float
+  address      String?
+  photo        String? // nom du fichier dans le dossier des envois, jamais un chemin
+  supportCount Int          @default(0)
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  authorId   String
+  author     User     @relation("ReportAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  assigneeId String?
+  assignee   User?    @relation("ReportAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  resolvedAt DateTime?
+
+  supports Support[]
+  events   ReportEvent[]
+
+  // Requêtes de la carte : filtrage par zone visible, puis par statut.
+  @@index([latitude, longitude])
+  @@index([status])
+  @@index([categoryId])
+  @@index([authorId])
+  @@index([assigneeId])
+}
+
+/// « Moi aussi » : un habitant confirme un signalement existant plutôt que d'en créer un doublon.
+model Support {
+  reportId  String
+  report    Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([reportId, userId])
+  @@index([userId])
+}
+
+/// Historique d'un signalement : création, changements de statut, attributions et commentaires.
+model ReportEvent {
+  id         String        @id @default(cuid())
+  type       EventType
+  fromStatus ReportStatus?
+  toStatus   ReportStatus?
+  message    String?
+  reportId   String
+  report     Report        @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  actorId    String
+  actor      User          @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  createdAt  DateTime      @default(now())
+
+  @@index([reportId, createdAt])
+}
