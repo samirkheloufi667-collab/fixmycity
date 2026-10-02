@@ -14,7 +14,8 @@ export const config = {
     return Number(process.env.PORT ?? 4100);
   },
   get webOrigin() {
-    return process.env.WEB_ORIGIN ?? 'http://localhost:5173';
+    // Sur Render, l'interface est servie par l'API elle-même : même adresse.
+    return process.env.WEB_ORIGIN ?? process.env.RENDER_EXTERNAL_URL ?? 'http://localhost:5173';
   },
   get jwtAccessSecret() {
     return required('JWT_ACCESS_SECRET');

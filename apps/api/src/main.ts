@@ -2,14 +2,39 @@ import './env';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
+import express from 'express';
 import helmet from 'helmet';
+import { join } from 'node:path';
 import { AppModule } from './app.module';
 import { config } from './config';
 
 export function configure(app: import('@nestjs/common').INestApplication) {
   app.setGlobalPrefix('api');
-  // Les photos sont affichées par l'interface, servie depuis une autre origine.
-  app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+  // Derrière le proxy de l'hébergeur, l'adresse IP réelle est dans X-Forwarded-For (limiteur de débit).
+  if (config.production) app.getHttpAdapter().getInstance().set('trust proxy', 1);
+  app.use(
+    helmet({
+      // En développement, l'interface est servie depuis une autre origine et affiche les photos de l'API.
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+      contentSecurityPolicy: {
+        directives: {
+          // Tuiles de la carte OpenStreetMap ; tout le reste vient de la même origine.
+          'img-src': ["'self'", 'data:', 'blob:', 'https://tile.openstreetmap.org'],
+          'style-src': ["'self'", "'unsafe-inline'"],
+        },
+      },
+    }),
+  );
+  // Production : l'API sert aussi l'interface compilée (application monopage).
+  const webDist = process.env.WEB_DIST;
+  if (webDist) {
+    app.use(express.static(webDist, { index: false, maxAge: '1h' }));
+    app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+      if (req.method !== 'GET' || req.path.startsWith('/api')) return next();
+      res.setHeader('Cache-Control', 'no-cache');
+      res.sendFile(join(webDist, 'index.html'));
+    });
+  }
   app.use(cookieParser());
   app.enableCors({ origin: config.webOrigin, credentials: true });
   // whitelist : tout champ non déclaré dans un DTO est rejeté, ce qui empêche
