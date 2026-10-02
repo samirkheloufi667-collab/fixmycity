@@ -8,6 +8,9 @@ et tableau de bord.
 
 > Projet de portfolio full stack — React · TypeScript · NestJS · PostgreSQL · Leaflet · Docker
 
+> **Démo en ligne : [fixmycity-vd1n.onrender.com](https://fixmycity-vd1n.onrender.com)** — compte `demo@fixmycity.dev` / `demo1234`.
+> Hébergement gratuit : le premier chargement peut prendre environ une minute ; les données de démonstration sont réinitialisées à chaque redémarrage.
+
 ## Fonctionnalités
 
 | | |
