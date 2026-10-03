@@ -1,41 +1,43 @@
 @import 'tailwindcss';
-@import '@fontsource-variable/inter';
-@import '@fontsource-variable/bricolage-grotesque';
+@import '@fontsource-variable/archivo/standard.css';
 @import 'leaflet/dist/leaflet.css';
 
 /*
- * Identité « civique » : papier chaud, encre vert sombre, un orange réservé à
- * l'action principale (signaler). Les couleurs de statut sont les mêmes
- * partout : carte, badges, graphiques.
+ * Identité « signalétique urbaine » : blanc, noir, et le jaune des panneaux
+ * réservé à l'action de signaler. Les statuts empruntent les couleurs de la
+ * voirie (bleu information, orange chantier, vert résolu). Une seule famille,
+ * Archivo, utilisée très étroite pour les titres comme sur un panneau.
  */
 @theme {
-  --color-paper: #f6f3ec;
-  --color-paper-2: #efeae0;
+  --color-paper: #f4f4f1;
+  --color-paper-2: #e9e9e4;
   --color-card: #ffffff;
-  --color-ink: #15201c;
-  --color-muted: #5f6b66;
-  --color-faint: #8c958f;
-  --color-line: #e4ded2;
-  --color-line-strong: #d3cbbb;
+  --color-ink: #0e0e0e;
+  --color-muted: #5c5c58;
+  --color-faint: #8f8f89;
+  --color-line: #d9d9d3;
+  --color-line-strong: #0e0e0e;
 
-  --color-brand: #0f6e5a;
-  --color-brand-strong: #0b5646;
-  --color-brand-soft: #dcefe8;
-  --color-accent: #f0642d;
-  --color-accent-strong: #d9521f;
-  --color-accent-soft: #fde7dc;
-  --color-danger: #c2410c;
+  --color-signal: #ffd400;
+  --color-signal-strong: #ffc400;
+  --color-danger: #d92d20;
 
-  --color-st-new: #3b6fd9;
-  --color-st-ack: #7a5ae0;
-  --color-st-progress: #d98a1b;
-  --color-st-resolved: #1e9a6a;
-  --color-st-rejected: #8a8f98;
+  --color-st-new: #1d5bd8;
+  --color-st-ack: #0e0e0e;
+  --color-st-progress: #f26a0f;
+  --color-st-resolved: #128a4e;
+  --color-st-rejected: #8f8f89;
 
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Bricolage Grotesque Variable', 'Inter Variable', ui-sans-serif, sans-serif;
+  /* Anciens noms conservés pour les composants qui s'y réfèrent. */
+  --color-brand: #0e0e0e;
+  --color-brand-strong: #0e0e0e;
+  --color-brand-soft: #e9e9e4;
+  --color-accent: #ffd400;
 
-  --shadow-card: 0 1px 2px rgb(21 32 28 / 0.04), 0 8px 24px -12px rgb(21 32 28 / 0.12);
+  --font-sans: 'Archivo Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Archivo Variable', ui-sans-serif, system-ui, sans-serif;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 html {
@@ -48,29 +50,82 @@ html {
 body {
   font-family: var(--font-sans);
   min-height: 100svh;
+  background: var(--color-paper);
 }
 
 ::selection {
-  background: var(--color-brand-soft);
+  background: var(--color-signal);
+  color: var(--color-ink);
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-brand);
+  outline: 3px solid var(--color-signal);
   outline-offset: 2px;
 }
 
-/* Carte : la police et les couleurs de l'application, pas celles de Leaflet. */
+/* Titres de panneau : très étroits, très gras, en capitales. */
+.sign {
+  font-family: var(--font-display);
+  font-stretch: 62%;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  line-height: 0.88;
+}
+.sign-wide {
+  font-stretch: 75%;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Lien souligné qui se trace au survol. */
+.u-link {
+  background: linear-gradient(currentColor, currentColor) no-repeat 0 100% / 0 2px;
+  transition: background-size 0.5s var(--ease-out-expo);
+}
+.u-link:hover,
+.u-link:focus-visible {
+  background-size: 100% 2px;
+}
+
+/* Bandes de chantier : diagonales jaunes et noires. */
+.hazard {
+  background: repeating-linear-gradient(-45deg, var(--color-signal) 0 14px, var(--color-ink) 14px 28px);
+}
+
+/* Fenêtres : entrée par le bas, fond assombri. */
+dialog.sheet[open] {
+  animation: sheet-in 0.45s var(--ease-out-expo);
+}
+dialog.sheet::backdrop {
+  background: rgb(14 14 14 / 0.55);
+}
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+/* Carte : fond OpenStreetMap en noir et blanc, pour que les plaques ressortent. */
 .leaflet-container {
   font-family: var(--font-sans);
   background: var(--color-paper-2);
 }
-/* Fond OpenStreetMap adouci : les épingles colorées ressortent mieux. */
 .leaflet-tile-pane {
-  filter: saturate(0.55) contrast(0.95) brightness(1.04);
+  filter: grayscale(1) contrast(1.08) brightness(1.05);
 }
 .leaflet-popup-content-wrapper {
-  border-radius: 14px;
-  box-shadow: var(--shadow-card);
+  border-radius: 0;
+  border: 2px solid var(--color-ink);
+  box-shadow: 6px 6px 0 var(--color-ink);
+}
+.leaflet-popup-tip {
+  border: 2px solid var(--color-ink);
 }
 .leaflet-popup-content {
   margin: 12px 14px;
@@ -78,35 +133,45 @@ body {
 .leaflet-control-attribution {
   font-size: 10px;
 }
+.leaflet-control-zoom a {
+  border-radius: 0 !important;
+  color: var(--color-ink) !important;
+}
 
-/* Épingle d'un signalement (voir components/map/pins.ts). */
+/* Épingle d'un signalement : une plaque avec le code de la catégorie (voir components/map/pins.ts). */
 .fmc-pin {
   background: transparent;
   border: 0;
 }
 .fmc-pin > span {
+  position: relative;
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50% 50% 50% 4px;
-  transform: rotate(-45deg);
-  border: 2px solid #fff;
-  box-shadow: 0 4px 12px -4px rgb(21 32 28 / 0.45);
-  transition: transform 0.15s ease;
+  width: 30px;
+  height: 26px;
+  border: 2px solid var(--color-ink);
+  font: 800 12px/1 var(--font-sans);
+  font-stretch: 70%;
+  letter-spacing: 0.02em;
+  transition: transform 0.2s var(--ease-out-expo);
+  transform-origin: 50% 100%;
 }
-.fmc-pin > span > svg {
-  transform: rotate(45deg);
-  width: 15px;
-  height: 15px;
-  color: #fff;
+.fmc-pin > span::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -9px;
+  width: 2px;
+  height: 7px;
+  background: var(--color-ink);
+  transform: translateX(-50%);
 }
 .fmc-pin.is-closed > span {
-  opacity: 0.55;
-  filter: grayscale(0.35);
+  opacity: 0.5;
 }
 .fmc-pin.is-active > span {
-  transform: rotate(-45deg) scale(1.2);
+  transform: scale(1.3);
+  box-shadow: 3px 3px 0 var(--color-ink);
 }
 
 @media (prefers-reduced-motion: reduce) {

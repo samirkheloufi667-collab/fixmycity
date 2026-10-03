@@ -1,5 +1,4 @@
 import type { Map as LeafletMap } from 'leaflet';
-import { LocateFixed } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Circle, MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
 import { Button } from '@/components/ui/primitives';
@@ -51,7 +50,7 @@ export function LocationPicker({
     return () => clearTimeout(t);
   }, []);
 
-  const icon = useMemo(() => pinIcon(category?.icon ?? 'pin', category?.color ?? '#f0642d', { active: true }), [category]);
+  const icon = useMemo(() => pinIcon(category ?? { name: '!!', color: '#ffd400' }, { active: true }), [category]);
 
   function locate() {
     if (!navigator.geolocation) {
@@ -77,7 +76,7 @@ export function LocationPicker({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="relative h-[340px] overflow-hidden rounded-2xl border border-line-strong sm:h-[400px]">
+      <div className="relative h-[340px] overflow-hidden border-2 border-ink sm:h-[420px]">
         <MapContainer
           ref={mapRef}
           center={value ? [value.latitude, value.longitude] : [city.latitude, city.longitude]}
@@ -89,7 +88,7 @@ export function LocationPicker({
           <Circle
             center={[city.latitude, city.longitude]}
             radius={city.radiusMeters}
-            pathOptions={{ color: '#0f6e5a', weight: 1.5, dashArray: '6 6', fillOpacity: 0.03 }}
+            pathOptions={{ color: '#0e0e0e', weight: 2, dashArray: '2 8', fillOpacity: 0 }}
             interactive={false}
           />
           <ClickToPlace onPick={onChange} />
@@ -109,20 +108,20 @@ export function LocationPicker({
         </MapContainer>
         {!value && (
           <div className="pointer-events-none absolute inset-x-0 top-3 z-[500] flex justify-center px-3">
-            <span className="rounded-full bg-ink/85 px-4 py-2 text-[13px] font-medium text-white shadow-lg">
+            <span className="sign-wide bg-signal px-3 py-1.5 text-[12px] text-ink border-2 border-ink">
               Touchez la carte à l’endroit du problème
             </span>
           </div>
         )}
         <div className="absolute right-3 bottom-3 z-[500]">
-          <Button variant="secondary" size="sm" onClick={locate} loading={locating} className="shadow-md">
-            {!locating && <LocateFixed className="size-4" />} Me localiser
+          <Button variant="secondary" size="sm" onClick={locate} loading={locating}>
+            ◎ Me localiser
           </Button>
         </div>
       </div>
       {geoError && <p className="text-sm text-danger">{geoError}</p>}
       {outside && (
-        <p className="text-sm font-medium text-danger">
+        <p className="border-l-4 border-danger pl-3 text-sm font-bold text-danger">
           Ce point est hors du territoire de {city.name} (cercle en pointillés) : la ville ne pourra pas intervenir.
         </p>
       )}

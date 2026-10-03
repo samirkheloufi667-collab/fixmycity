@@ -191,7 +191,7 @@ describe('doublons et soutiens', () => {
 
 describe('traitement par les services de la ville', () => {
   let citizen: { token: string; id: string };
-  let karim: { token: string; id: string };
+  let thomas: { token: string; id: string };
   let sofia: { token: string; id: string };
   let admin: { token: string; id: string };
   let reportId: string;
@@ -199,9 +199,9 @@ describe('traitement par les services de la ville', () => {
 
   beforeAll(async () => {
     citizen = await register('citoyen@test.dev');
-    karim = await withRole('karim@test.dev', 'Karim Benali', 'AGENT');
+    thomas = await withRole('thomas@test.dev', 'Thomas Garnier', 'AGENT');
     sofia = await withRole('sofia@test.dev', 'Sofia Rossi', 'AGENT');
-    admin = await withRole('admin@test.dev', 'Nadia Haddad', 'ADMIN');
+    admin = await withRole('admin@test.dev', 'Claire Lambert', 'ADMIN');
     reportId = (await createReport(citizen.token)).body.id;
   });
 
@@ -212,14 +212,14 @@ describe('traitement par les services de la ville', () => {
   });
 
   it('refuse de sauter une étape', async () => {
-    const res = await http.patch(`/api/reports/${reportId}/status`).set(as(karim)).send({ status: 'RESOLVED', message: 'Fait' });
+    const res = await http.patch(`/api/reports/${reportId}/status`).set(as(thomas)).send({ status: 'RESOLVED', message: 'Fait' });
     expect(res.status).toBe(400);
   });
 
   it("un agent qui fait avancer un signalement libre le prend en charge", async () => {
-    const res = await http.patch(`/api/reports/${reportId}/status`).set(as(karim)).send({ status: 'ACKNOWLEDGED' });
+    const res = await http.patch(`/api/reports/${reportId}/status`).set(as(thomas)).send({ status: 'ACKNOWLEDGED' });
     expect(res.status).toBe(200);
-    expect(res.body.assignee.id).toBe(karim.id);
+    expect(res.body.assignee.id).toBe(thomas.id);
     expect(res.body.events.map((e: { type: string }) => e.type)).toEqual(['CREATED', 'ASSIGNED', 'STATUS_CHANGED']);
   });
 
@@ -229,12 +229,12 @@ describe('traitement par les services de la ville', () => {
   });
 
   it("une résolution doit dire ce qui a été fait", async () => {
-    await http.patch(`/api/reports/${reportId}/status`).set(as(karim)).send({ status: 'IN_PROGRESS' }).expect(200);
-    const sans = await http.patch(`/api/reports/${reportId}/status`).set(as(karim)).send({ status: 'RESOLVED' });
+    await http.patch(`/api/reports/${reportId}/status`).set(as(thomas)).send({ status: 'IN_PROGRESS' }).expect(200);
+    const sans = await http.patch(`/api/reports/${reportId}/status`).set(as(thomas)).send({ status: 'RESOLVED' });
     expect(sans.status).toBe(400);
     const avec = await http
       .patch(`/api/reports/${reportId}/status`)
-      .set(as(karim))
+      .set(as(thomas))
       .send({ status: 'RESOLVED', message: 'Ampoule remplacée' });
     expect(avec.status).toBe(200);
     expect(avec.body.resolvedAt).not.toBeNull();
@@ -251,7 +251,7 @@ describe('traitement par les services de la ville', () => {
     const versSofia = await http.patch(`/api/reports/${autre}/assignee`).set(as(admin)).send({ assigneeId: sofia.id });
     expect(versSofia.body.assignee.id).toBe(sofia.id);
     // Un agent ne peut pas attribuer.
-    expect((await http.patch(`/api/reports/${autre}/assignee`).set(as(karim)).send({ assigneeId: karim.id })).status).toBe(403);
+    expect((await http.patch(`/api/reports/${autre}/assignee`).set(as(thomas)).send({ assigneeId: thomas.id })).status).toBe(403);
   });
 
   it('un agent rétrogradé perd ses droits immédiatement, même avec un jeton encore valide', async () => {
@@ -269,7 +269,7 @@ describe('traitement par les services de la ville', () => {
   });
 
   it('le tableau de bord compte les signalements par statut', async () => {
-    const res = await http.get('/api/admin/stats').set(as(karim));
+    const res = await http.get('/api/admin/stats').set(as(thomas));
     expect(res.status).toBe(200);
     expect(res.body.counts.RESOLVED).toBeGreaterThanOrEqual(1);
     expect(res.body.weeks).toHaveLength(8);

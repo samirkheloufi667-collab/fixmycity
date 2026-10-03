@@ -1,22 +1,26 @@
-import { Armchair, Construction, Lightbulb, LoaderCircle, MapPin, Signpost, Trash2, Trees, TriangleAlert } from 'lucide-react';
 import { forwardRef } from 'react';
-import { cx, STATUS_COLOR, STATUS_LABEL } from '@/lib/format';
+import { categoryCode, cx, inkOn, STATUS_COLOR, STATUS_LABEL } from '@/lib/format';
 import type { ReportStatus } from '@/lib/types';
 
 type Variant = 'primary' | 'accent' | 'secondary' | 'ghost' | 'danger';
 type Size = 'sm' | 'md' | 'lg';
 
+/*
+ * Boutons de panneau : angles droits, capitales étroites, contour noir.
+ * « accent » est le jaune signalisation, réservé à l'action de signaler.
+ * Au survol, le bouton se décale comme une plaque qu'on enfonce.
+ */
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-brand text-white hover:bg-brand-strong shadow-sm',
-  accent: 'bg-accent text-white hover:bg-accent-strong shadow-sm shadow-accent/30',
-  secondary: 'bg-card text-ink border border-line-strong hover:border-ink/40',
-  ghost: 'text-muted hover:text-ink hover:bg-paper-2',
-  danger: 'bg-card text-danger border border-danger/30 hover:bg-danger/5',
+  primary: 'bg-ink text-paper border-2 border-ink hover:bg-paper hover:text-ink',
+  accent: 'bg-signal text-ink border-2 border-ink shadow-[3px_3px_0_var(--color-ink)] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px]',
+  secondary: 'bg-card text-ink border-2 border-ink hover:bg-ink hover:text-paper',
+  ghost: 'text-muted hover:text-ink border-2 border-transparent',
+  danger: 'bg-card text-danger border-2 border-danger hover:bg-danger hover:text-white',
 };
 const SIZES: Record<Size, string> = {
-  sm: 'h-8 px-3 text-[13px] gap-1.5 rounded-lg',
-  md: 'h-10 px-4 text-sm gap-2 rounded-xl',
-  lg: 'h-12 px-6 text-[15px] gap-2 rounded-2xl',
+  sm: 'h-8 px-3 text-[12px] gap-1.5',
+  md: 'h-10 px-4 text-[13px] gap-2',
+  lg: 'h-12 px-6 text-[15px] gap-2',
 };
 
 export const buttonClass = (variant: Variant = 'primary', size: Size = 'md', className?: string) =>
@@ -24,7 +28,7 @@ export const buttonClass = (variant: Variant = 'primary', size: Size = 'md', cla
     // Un bouton masqué sur mobile (« hidden sm:inline-flex ») ne doit pas recevoir
     // aussi « inline-flex » : dans la feuille de style, ce dernier l'emporterait sur « hidden ».
     /(^|\s)hidden(\s|$)/.test(className ?? '') ? null : 'inline-flex',
-    'items-center justify-center font-semibold whitespace-nowrap transition-colors disabled:opacity-50 disabled:pointer-events-none select-none',
+    'sign-wide items-center justify-center whitespace-nowrap transition-[background-color,color,box-shadow,transform] duration-200 disabled:opacity-40 disabled:pointer-events-none select-none',
     VARIANTS[variant],
     SIZES[size],
     className,
@@ -42,46 +46,31 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
 ) {
   return (
     <button ref={ref} type={type} className={buttonClass(variant, size, className)} disabled={disabled || loading} {...rest}>
-      {loading && <LoaderCircle className="size-4 animate-spin" aria-hidden />}
+      {loading && <span className="size-3 animate-spin border-2 border-current border-t-transparent" aria-hidden />}
       {children}
     </button>
   );
 });
 
 const fieldBase =
-  'w-full rounded-xl border border-line-strong bg-card px-3.5 text-[15px] text-ink placeholder:text-faint transition-colors focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/10';
+  'w-full border-2 border-ink bg-card px-3.5 text-[15px] text-ink placeholder:text-faint transition-shadow focus:outline-none focus:shadow-[4px_4px_0_var(--color-signal)]';
 
-export const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(function Input(
-  { className, ...rest },
-  ref,
-) {
+export const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(function Input({ className, ...rest }, ref) {
   return <input ref={ref} className={cx(fieldBase, 'h-11', className)} {...rest} />;
 });
 
-export const Textarea = forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(
-  function Textarea({ className, ...rest }, ref) {
-    return <textarea ref={ref} className={cx(fieldBase, 'min-h-28 py-3 leading-relaxed', className)} {...rest} />;
-  },
-);
+export const Textarea = forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(function Textarea({ className, ...rest }, ref) {
+  return <textarea ref={ref} className={cx(fieldBase, 'min-h-28 py-3 leading-relaxed', className)} {...rest} />;
+});
 
 export function Select({ className, ...rest }: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select className={cx(fieldBase, 'h-11 pr-8', className)} {...rest} />;
+  return <select className={cx(fieldBase, 'h-11 cursor-pointer pr-8', className)} {...rest} />;
 }
 
-export function Field({
-  label,
-  htmlFor,
-  hint,
-  children,
-}: {
-  label: string;
-  htmlFor?: string;
-  hint?: React.ReactNode;
-  children: React.ReactNode;
-}) {
+export function Field({ label, htmlFor, hint, children }: { label: string; htmlFor?: string; hint?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={htmlFor} className="text-sm font-semibold text-ink">
+      <label htmlFor={htmlFor} className="sign-wide text-[12px] text-ink">
         {label}
       </label>
       {children}
@@ -90,16 +79,15 @@ export function Field({
   );
 }
 
+/** Panneau : fond blanc, contour noir épais, sans arrondi ni ombre floue. */
 export function Card({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cx('rounded-3xl border border-line bg-card shadow-card', className)} {...rest} />;
+  return <div className={cx('border-2 border-ink bg-card', className)} {...rest} />;
 }
 
+/** Plaque rectangulaire de couleur, texte en capitales étroites. */
 export function Badge({ color, className, children }: { color: string; className?: string; children: React.ReactNode }) {
   return (
-    <span
-      className={cx('inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold', className)}
-      style={{ color, backgroundColor: `color-mix(in srgb, ${color} 13%, white)` }}
-    >
+    <span className={cx('sign-wide inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] whitespace-nowrap', className)} style={{ background: color, color: color.startsWith('#') ? inkOn(color) : '#fff' }}>
       {children}
     </span>
   );
@@ -107,75 +95,69 @@ export function Badge({ color, className, children }: { color: string; className
 
 export function StatusBadge({ status, className }: { status: ReportStatus; className?: string }) {
   return (
-    <Badge color={STATUS_COLOR[status]} className={className}>
-      <span className="size-1.5 rounded-full" style={{ background: STATUS_COLOR[status] }} />
+    <span className={cx('sign-wide inline-flex items-center gap-1.5 text-[11px] whitespace-nowrap', className)} style={{ color: STATUS_COLOR[status] }}>
+      <span className="inline-block size-2.5 rounded-full border-2 border-current" style={{ background: status === 'RESOLVED' || status === 'REJECTED' ? 'currentColor' : 'transparent' }} />
       {STATUS_LABEL[status]}
-    </Badge>
-  );
-}
-
-const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
-  construction: Construction,
-  lightbulb: Lightbulb,
-  'trash-2': Trash2,
-  trees: Trees,
-  armchair: Armchair,
-  signpost: Signpost,
-};
-
-export function CategoryIcon({ icon, className, style }: { icon: string; className?: string; style?: React.CSSProperties }) {
-  const Icon = CATEGORY_ICONS[icon] ?? MapPin;
-  return <Icon className={className} style={style} aria-hidden />;
-}
-
-/** Pastille colorée avec l'icône de la catégorie. */
-export function CategoryMark({ icon, color, size = 36 }: { icon: string; color: string; size?: number }) {
-  return (
-    <span
-      className="flex shrink-0 items-center justify-center rounded-xl"
-      style={{ width: size, height: size, background: `color-mix(in srgb, ${color} 15%, white)`, color }}
-    >
-      <CategoryIcon icon={icon} className="size-[45%]" />
     </span>
   );
 }
 
-export function Spinner({ label = 'Chargement…' }: { label?: string }) {
+type CategoryLike = { slug?: string; name: string; color: string };
+
+/** Plaque d'une catégorie : son code de deux lettres, comme une ligne de bus. */
+export function CategoryMark({ category, size = 36 }: { category: CategoryLike; size?: number }) {
   return (
-    <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted" role="status">
-      <LoaderCircle className="size-5 animate-spin text-brand" aria-hidden />
-      {label}
+    <span
+      className="flex shrink-0 items-center justify-center border-2 border-ink font-extrabold"
+      style={{ width: size, height: size, background: category.color, color: inkOn(category.color), fontSize: size * 0.4, fontStretch: '70%' }}
+      title={category.name}
+      aria-hidden
+    >
+      {categoryCode(category)}
+    </span>
+  );
+}
+
+export function Spinner({ label = 'Chargement' }: { label?: string }) {
+  return (
+    <div className="flex items-center justify-center gap-3 py-16" role="status">
+      <span className="hazard block h-3 w-16 animate-[hazard_0.8s_linear_infinite] border-2 border-ink [background-size:40px_40px]" aria-hidden />
+      <span className="sign-wide text-[12px] text-muted">{label}…</span>
+      <style>{'@keyframes hazard{to{background-position:40px 0}}'}</style>
     </div>
   );
 }
 
 export function ErrorNote({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-2.5 rounded-2xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger" role="alert">
-      <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+    <div className="flex items-start gap-3 border-2 border-danger bg-card px-4 py-3 text-sm text-danger" role="alert">
+      <span className="sign-wide shrink-0 bg-danger px-1.5 text-[11px] text-white">Erreur</span>
       <div>{children}</div>
     </div>
   );
 }
 
-export function EmptyState({ icon, title, text, action }: { icon: React.ReactNode; title: string; text?: string; action?: React.ReactNode }) {
+/** État vide : un panneau barré de bandes de chantier, une phrase. */
+export function EmptyState({ title, text, action }: { icon?: React.ReactNode; title: string; text?: string; action?: React.ReactNode }) {
   return (
-    <div className="flex flex-col items-center rounded-3xl border border-dashed border-line-strong px-6 py-14 text-center">
-      <span className="flex size-12 items-center justify-center rounded-2xl bg-brand-soft text-brand">{icon}</span>
-      <h3 className="mt-4 font-display text-lg font-semibold">{title}</h3>
-      {text && <p className="mt-1.5 max-w-sm text-sm text-muted">{text}</p>}
-      {action && <div className="mt-5">{action}</div>}
+    <div className="border-2 border-ink bg-card">
+      <div className="hazard h-3 border-b-2 border-ink" aria-hidden />
+      <div className="px-6 py-10">
+        <h3 className="sign text-4xl">{title}</h3>
+        {text && <p className="mt-3 max-w-md text-[15px] text-muted">{text}</p>}
+        {action && <div className="mt-6">{action}</div>}
+      </div>
     </div>
   );
 }
 
 export function PageHeader({ eyebrow, title, subtitle, actions }: { eyebrow?: string; title: string; subtitle?: React.ReactNode; actions?: React.ReactNode }) {
   return (
-    <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <header className="flex flex-col gap-5 border-b-4 border-ink pb-6 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        {eyebrow && <p className="text-xs font-semibold tracking-[0.14em] text-brand uppercase">{eyebrow}</p>}
-        <h1 className="mt-1 font-display text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
-        {subtitle && <p className="mt-2 max-w-2xl text-[15px] text-muted">{subtitle}</p>}
+        {eyebrow && <p className="sign-wide mb-3 inline-block bg-ink px-2 py-0.5 text-[11px] text-paper">{eyebrow}</p>}
+        <h1 className="sign text-5xl sm:text-7xl">{title}</h1>
+        {subtitle && <p className="mt-4 max-w-2xl text-[15px] text-muted">{subtitle}</p>}
       </div>
       {actions && <div className="flex shrink-0 flex-wrap gap-2">{actions}</div>}
     </header>

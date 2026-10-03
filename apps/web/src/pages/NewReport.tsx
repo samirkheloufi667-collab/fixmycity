@@ -1,13 +1,12 @@
-import { Camera, ImagePlus, Info, LogIn, Users, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { distanceMeters, LocationPicker, type Position } from '@/components/map/LocationPicker';
-import Stepper from '@/components/reactbits/Stepper';
-import { Button, buttonClass, Card, CategoryIcon, ErrorNote, Field, Input, PageHeader, Spinner, StatusBadge, Textarea } from '@/components/ui/primitives';
+import Stepper from '@/components/Stepper';
+import { Button, buttonClass, Card, CategoryMark, ErrorNote, Field, Input, PageHeader, Spinner, StatusBadge, Textarea } from '@/components/ui/primitives';
 import { useToast } from '@/components/ui/toast';
 import { api, errorMessage } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { cx } from '@/lib/format';
+import { cx, inkOn } from '@/lib/format';
 import { useReference } from '@/lib/reference';
 import type { ReportDetail, ReportSummary } from '@/lib/types';
 
@@ -51,21 +50,19 @@ export default function NewReport() {
 
   if (!me) {
     return (
-      <Card className="mx-auto max-w-lg p-8 text-center">
-        <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-brand-soft text-brand">
-          <LogIn className="size-5" />
-        </span>
-        <h1 className="mt-4 font-display text-2xl font-bold">Connectez-vous pour signaler</h1>
-        <p className="mt-2 text-sm text-muted">
-          Un compte permet à la ville de vous tenir informé de l’avancement, et limite les faux signalements.
-        </p>
-        <div className="mt-6 flex justify-center gap-2">
-          <Link to="/connexion?next=/signaler" className={buttonClass('primary')}>
-            Connexion
-          </Link>
-          <Link to="/inscription?next=/signaler" className={buttonClass('secondary')}>
-            Créer un compte
-          </Link>
+      <Card className="mx-auto max-w-lg">
+        <div className="hazard h-3 border-b-2 border-ink" aria-hidden />
+        <div className="p-8">
+          <h1 className="sign text-5xl">Connectez-vous pour signaler</h1>
+          <p className="mt-3 text-[15px] text-muted">Un compte permet à la ville de vous tenir informé de l’avancement, et limite les faux signalements.</p>
+          <div className="mt-6 flex gap-2">
+            <Link to="/connexion?next=/signaler" className={buttonClass('primary')}>
+              Connexion
+            </Link>
+            <Link to="/inscription?next=/signaler" className={buttonClass('secondary')}>
+              Créer un compte
+            </Link>
+          </div>
         </div>
       </Card>
     );
@@ -73,13 +70,7 @@ export default function NewReport() {
 
   const outside = position ? distanceMeters(city, position) > city.radiusMeters : false;
   const canContinue =
-    step === 1
-      ? Boolean(position) && !outside
-      : step === 2
-        ? Boolean(categoryId) && title.trim().length >= 5 && description.trim().length >= 10
-        : step === 3
-          ? !photoError
-          : true;
+    step === 1 ? Boolean(position) && !outside : step === 2 ? Boolean(categoryId) && title.trim().length >= 5 && description.trim().length >= 10 : step === 3 ? !photoError : true;
 
   function pickPhoto(file: File | undefined) {
     setPhotoError(null);
@@ -129,29 +120,21 @@ export default function NewReport() {
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-8">
-      <PageHeader eyebrow="Nouveau signalement" title="Qu’avez-vous remarqué ?" subtitle="Quatre étapes rapides. La ville reçoit votre signalement dès l’envoi." />
+      <PageHeader eyebrow="Nouveau signalement" title="Qu’avez-vous vu ?" subtitle="Quatre étapes. La ville reçoit votre signalement dès l’envoi." />
 
       <Card className="p-5 sm:p-8">
-        <Stepper
-          step={step}
-          onStepChange={setStep}
-          onComplete={submit}
-          labels={LABELS}
-          canContinue={canContinue}
-          completing={sending}
-          completeText="Envoyer le signalement"
-        >
-          <section className="flex flex-col gap-4">
+        <Stepper step={step} onStepChange={setStep} onComplete={submit} labels={LABELS} canContinue={canContinue} completing={sending} completeText="Envoyer le signalement ↗">
+          <section className="flex flex-col gap-5">
             <LocationPicker city={city} value={position} onChange={setPosition} category={category} />
             <Field label="Repère ou adresse (facultatif)" htmlFor="address" hint="Aide l’équipe à trouver l’endroit : numéro, commerce, arrêt de bus…">
               <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} maxLength={120} placeholder="Ex. : devant le 12 rue Pasteur" />
             </Field>
           </section>
 
-          <section className="flex flex-col gap-5">
+          <section className="flex flex-col gap-6">
             <fieldset>
-              <legend className="mb-2 text-sm font-semibold">Catégorie</legend>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              <legend className="sign-wide mb-2 text-[12px]">Catégorie</legend>
+              <div className="grid grid-cols-2 border-t-2 border-l-2 border-ink sm:grid-cols-3">
                 {categories.map((c) => {
                   const active = c.id === categoryId;
                   return (
@@ -160,15 +143,10 @@ export default function NewReport() {
                       type="button"
                       onClick={() => setCategoryId(c.id)}
                       aria-pressed={active}
-                      className={cx(
-                        'flex items-center gap-2.5 rounded-2xl border-2 px-3 py-3 text-left text-sm font-semibold transition-colors',
-                        active ? 'bg-card' : 'border-line bg-card hover:border-line-strong',
-                      )}
-                      style={active ? { borderColor: c.color } : undefined}
+                      className={cx('flex items-center gap-3 border-r-2 border-b-2 border-ink px-3 py-3 text-left text-sm font-bold transition-colors', active ? '' : 'bg-card hover:bg-paper-2')}
+                      style={active ? { background: c.color, color: inkOn(c.color) } : undefined}
                     >
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl" style={{ background: `color-mix(in srgb, ${c.color} 15%, white)`, color: c.color }}>
-                        <CategoryIcon icon={c.icon} className="size-4" />
-                      </span>
+                      <CategoryMark category={c} size={34} />
                       {c.name}
                     </button>
                   );
@@ -185,72 +163,69 @@ export default function NewReport() {
 
           <section className="flex flex-col gap-4">
             {preview ? (
-              <div className="relative overflow-hidden rounded-2xl border border-line">
+              <div className="relative border-2 border-ink">
                 <img src={preview} alt="Aperçu de la photo" className="max-h-80 w-full object-cover" />
-                <button
-                  type="button"
-                  onClick={() => setPhoto(null)}
-                  className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-ink/80 px-3 py-1.5 text-xs font-semibold text-white"
-                >
-                  <X className="size-3.5" /> Retirer
+                <button type="button" onClick={() => setPhoto(null)} className={buttonClass('secondary', 'sm', 'absolute top-3 right-3')}>
+                  Retirer ✕
                 </button>
               </div>
             ) : (
-              <label className="flex cursor-pointer flex-col items-center rounded-2xl border-2 border-dashed border-line-strong bg-paper px-6 py-12 text-center transition-colors hover:border-brand hover:bg-brand-soft/30">
-                <span className="flex size-12 items-center justify-center rounded-2xl bg-brand-soft text-brand">
-                  <ImagePlus className="size-5" />
-                </span>
-                <span className="mt-3 font-semibold">Ajouter une photo</span>
-                <span className="mt-1 text-sm text-muted">JPEG ou PNG, 5 Mo maximum — facultatif mais très utile</span>
+              <label className="group flex cursor-pointer flex-col items-start border-2 border-dashed border-ink bg-card px-6 py-10 transition-colors hover:bg-signal">
+                <span className="sign text-4xl">+ Ajouter une photo</span>
+                <span className="mt-2 text-sm text-muted group-hover:text-ink">JPEG ou PNG, 5 Mo maximum — facultatif mais très utile</span>
                 <input type="file" accept="image/jpeg,image/png" capture="environment" className="sr-only" onChange={(e) => pickPhoto(e.target.files?.[0])} />
               </label>
             )}
             {photoError && <ErrorNote>{photoError}</ErrorNote>}
-            <p className="flex items-start gap-2 text-[13px] text-muted">
-              <Camera className="mt-0.5 size-4 shrink-0" />
-              Les coordonnées GPS et les informations de votre téléphone contenues dans la photo sont supprimées par le serveur avant publication.
-            </p>
+            <p className="border-l-4 border-ink pl-3 text-[13px] text-muted">Les coordonnées GPS et les informations de votre téléphone contenues dans la photo sont supprimées par le serveur avant publication.</p>
           </section>
 
           <section className="flex flex-col gap-5">
             {nearby === null ? (
-              <Spinner label="Recherche de signalements proches…" />
+              <Spinner label="Recherche de signalements proches" />
             ) : nearby.length > 0 ? (
-              <div className="rounded-2xl border border-st-progress/30 bg-st-progress/5 p-4">
-                <p className="flex items-start gap-2 text-sm font-semibold text-ink">
-                  <Info className="mt-0.5 size-4 shrink-0 text-st-progress" />
-                  {nearby.length > 1 ? `${nearby.length} signalements similaires existent` : 'Un signalement similaire existe'} à moins de 75 m. Est-ce le même problème ?
-                </p>
-                <ul className="mt-3 flex flex-col gap-2">
-                  {nearby.map((n) => (
-                    <li key={n.id} className="flex flex-wrap items-center gap-3 rounded-xl bg-card p-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold">{n.title}</p>
-                        <p className="mt-1 flex items-center gap-2 text-xs text-muted">
-                          <StatusBadge status={n.status} /> à {n.distance} m · <Users className="size-3" /> {n.supportCount}
-                        </p>
-                      </div>
-                      <Button size="sm" onClick={() => supportExisting(n.id)}>
-                        C’est le même : je soutiens
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-3 text-xs text-muted">Soutenir plutôt que dupliquer aide la ville à voir ce qui touche le plus de monde.</p>
+              <div className="border-2 border-ink bg-card">
+                <div className="hazard h-2.5 border-b-2 border-ink" aria-hidden />
+                <div className="p-4">
+                  <p className="text-sm font-bold text-ink">
+                    {nearby.length > 1 ? `${nearby.length} signalements similaires existent` : 'Un signalement similaire existe'} à moins de 75 m. Est-ce le même problème ?
+                  </p>
+                  <ul className="mt-3 flex flex-col gap-2">
+                    {nearby.map((n) => (
+                      <li key={n.id} className="flex flex-wrap items-center gap-3 border-2 border-ink bg-paper p-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-bold">{n.title}</p>
+                          <p className="mt-1 flex items-center gap-3 text-xs text-muted">
+                            <StatusBadge status={n.status} /> à {n.distance} m · {n.supportCount} concerné(s)
+                          </p>
+                        </div>
+                        <Button size="sm" onClick={() => supportExisting(n.id)}>
+                          C’est le même : je soutiens
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-3 text-xs text-muted">Soutenir plutôt que dupliquer aide la ville à voir ce qui touche le plus de monde.</p>
+                </div>
               </div>
             ) : (
-              <p className="rounded-2xl bg-brand-soft/60 px-4 py-3 text-sm text-brand-strong">Aucun signalement similaire à proximité : le vôtre est nouveau.</p>
+              <p className="border-l-4 border-st-resolved pl-3 text-sm font-bold text-st-resolved">Aucun signalement similaire à proximité : le vôtre est nouveau.</p>
             )}
 
-            <div className="rounded-2xl border border-line p-4">
-              <p className="text-xs font-semibold tracking-[0.12em] text-faint uppercase">Récapitulatif</p>
-              <p className="mt-2 font-display text-lg font-semibold">{title}</p>
-              <p className="text-sm font-semibold" style={{ color: category?.color }}>
-                {category?.name}
-                {address ? <span className="font-normal text-muted"> · {address}</span> : null}
-              </p>
-              <p className="mt-2 line-clamp-3 text-sm text-muted">{description}</p>
-              {photo && <p className="mt-2 text-xs text-muted">Photo jointe : {photo.name}</p>}
+            <div className="border-2 border-ink">
+              <p className="sign-wide border-b-2 border-ink bg-ink px-4 py-1.5 text-[11px] text-paper">Récapitulatif</p>
+              <div className="flex gap-4 p-4">
+                {category && <CategoryMark category={category} size={48} />}
+                <div className="min-w-0">
+                  <p className="text-lg leading-snug font-bold">{title}</p>
+                  <p className="text-sm font-bold">
+                    {category?.name}
+                    {address ? <span className="font-normal text-muted"> · {address}</span> : null}
+                  </p>
+                  <p className="mt-2 line-clamp-3 text-sm text-muted">{description}</p>
+                  {photo && <p className="mt-2 text-xs text-muted">Photo jointe : {photo.name}</p>}
+                </div>
+              </div>
             </div>
             {error && <ErrorNote>{error}</ErrorNote>}
           </section>

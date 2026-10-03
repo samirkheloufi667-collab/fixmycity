@@ -72,7 +72,7 @@ export function ReportsMap({
       <Circle
         center={[city.latitude, city.longitude]}
         radius={city.radiusMeters}
-        pathOptions={{ color: '#0f6e5a', weight: 1.5, dashArray: '6 6', fillOpacity: 0.02 }}
+        pathOptions={{ color: '#0e0e0e', weight: 2, dashArray: '2 8', fillOpacity: 0 }}
         interactive={false}
       />
       <BoundsWatcher onChange={onBoundsChange} />
@@ -81,7 +81,7 @@ export function ReportsMap({
         <Marker
           key={p.id}
           position={[p.latitude, p.longitude]}
-          icon={pinIcon(p.category.icon, p.category.color, {
+          icon={pinIcon(p.category, {
             closed: !OPEN_STATUSES.includes(p.status),
             active: p.id === selectedId,
           })}
@@ -91,19 +91,14 @@ export function ReportsMap({
           {/* Marge haute : sur mobile, les filtres flottent au-dessus de la carte. */}
           <Popup autoPanPaddingTopLeft={[16, 200]} autoPanPaddingBottomRight={[16, 90]}>
             <div className="w-56">
-              <p className="text-xs font-semibold" style={{ color: p.category.color }}>
-                {p.category.name}
-              </p>
-              <p className="mt-1 font-display text-[15px] leading-snug font-semibold text-ink">{p.title}</p>
+              <p className="sign-wide text-[11px]">{p.category.name}</p>
+              <p className="mt-1 text-[15px] leading-snug font-bold text-ink">{p.title}</p>
               <div className="mt-2 flex items-center justify-between gap-2">
                 <StatusBadge status={p.status} />
-                <span className="text-xs text-muted">{plural(p.supportCount, 'personne', 'personnes')}</span>
+                <span className="tnum text-xs font-bold">{plural(p.supportCount, 'concerné', 'concernés')}</span>
               </div>
-              <Link
-                to={`/signalements/${p.id}`}
-                className="mt-3 block rounded-lg bg-brand px-3 py-2 text-center text-[13px] font-semibold !text-white hover:bg-brand-strong"
-              >
-                Voir le suivi
+              <Link to={`/signalements/${p.id}`} className="sign-wide mt-3 block bg-ink px-3 py-2 text-center text-[12px] !text-paper hover:bg-signal hover:!text-ink">
+                Voir le suivi →
               </Link>
             </div>
           </Popup>

@@ -58,8 +58,8 @@ Mot de passe commun : `demo1234` — la page de connexion propose aussi trois bo
 | E-mail | Rôle |
 |---|---|
 | `demo@fixmycity.dev` | Habitante (Léa) : ses signalements couvrent tous les statuts |
-| `agent@fixmycity.dev` | Agent de la ville (Karim) |
-| `admin@fixmycity.dev` | Administratrice (Nadia) |
+| `agent@fixmycity.dev` | Agent de la ville (Thomas) |
+| `admin@fixmycity.dev` | Administratrice (Claire) |
 
 Les données sont fictives. La carte est centrée sur Le Kremlin-Bicêtre (campus
 d'Epitech Paris) ; le projet n'a aucun lien avec une mairie.

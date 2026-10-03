@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
-import { Logo } from '@/components/Layout';
-import { Button, Card, ErrorNote, Field, Input } from '@/components/ui/primitives';
+import { Copyright, Logo } from '@/components/Layout';
+import { Button, ErrorNote, Field, Input } from '@/components/ui/primitives';
 import { errorMessage } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { isStaff } from '@/lib/format';
 
 /** Comptes des données de démonstration (prisma/seed.ts), pour qu'un visiteur essaie chaque rôle. */
 const DEMO = [
-  { label: 'Habitante', email: 'demo@fixmycity.dev' },
-  { label: 'Agent', email: 'agent@fixmycity.dev' },
-  { label: 'Admin', email: 'admin@fixmycity.dev' },
+  { label: 'Léa Martin', role: 'Habitante', email: 'demo@fixmycity.dev' },
+  { label: 'Thomas Garnier', role: 'Agent de la ville', email: 'agent@fixmycity.dev' },
+  { label: 'Claire Lambert', role: 'Administratrice', email: 'admin@fixmycity.dev' },
 ];
 
 /** N'accepte qu'un chemin interne comme destination après connexion. */
@@ -20,13 +20,20 @@ function safeNext(raw: string | null) {
 
 function AuthFrame({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center bg-[radial-gradient(60rem_30rem_at_50%_-10%,var(--color-brand-soft),transparent)] px-4 py-10">
-      <Logo />
-      <Card className="mt-8 w-full max-w-md p-6 sm:p-8">
-        <h1 className="font-display text-2xl font-bold">{title}</h1>
-        <p className="mt-1 text-sm text-muted">{subtitle}</p>
-        <div className="mt-6">{children}</div>
-      </Card>
+    <div className="grid min-h-svh lg:grid-cols-2">
+      {/* À gauche, un grand panneau jaune ; à droite, le formulaire. */}
+      <div className="flex flex-col justify-between border-ink bg-signal p-6 sm:p-10 lg:border-r-4">
+        <Logo />
+        <div className="py-14 lg:py-0">
+          <h1 className="sign text-7xl sm:text-8xl">{title}</h1>
+          <p className="mt-5 max-w-sm text-lg font-medium">{subtitle}</p>
+        </div>
+        <div className="hazard hidden h-4 border-2 border-ink lg:block" aria-hidden />
+      </div>
+      <main className="flex flex-col justify-center px-6 py-12 sm:px-10 lg:px-16">
+        <div className="w-full max-w-md">{children}</div>
+        <Copyright className="mt-12" />
+      </main>
     </div>
   );
 }
@@ -55,7 +62,7 @@ export function Login() {
 
   const next = params.get('next');
   return (
-    <AuthFrame title="Connexion" subtitle="Suivez vos signalements et ceux de votre quartier.">
+    <AuthFrame title="Connexion" subtitle="Suivez vos signalements et ceux de votre quartier, étape par étape.">
       <form onSubmit={submit} className="flex flex-col gap-4">
         {error && <ErrorNote>{error}</ErrorNote>}
         <Field label="E-mail" htmlFor="email">
@@ -69,28 +76,33 @@ export function Login() {
         </Button>
       </form>
 
-      <div className="mt-6 rounded-2xl bg-paper-2 p-4">
-        <p className="text-xs font-semibold tracking-[0.12em] text-muted uppercase">Essayer un rôle de démonstration</p>
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          {DEMO.map((d) => (
-            <button
-              key={d.email}
-              type="button"
-              onClick={() => {
-                setEmail(d.email);
-                setPassword('demo1234');
-              }}
-              className="rounded-xl border border-line-strong bg-card px-2 py-2 text-[13px] font-semibold hover:border-brand hover:text-brand"
-            >
-              {d.label}
-            </button>
-          ))}
-        </div>
+      <div className="mt-8">
+        <p className="sign-wide border-b-4 border-ink pb-2 text-[12px]">Essayer un rôle de démonstration</p>
+        <ul>
+          {DEMO.map((d) => {
+            const selected = email === d.email;
+            return (
+              <li key={d.email}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail(d.email);
+                    setPassword('demo1234');
+                  }}
+                  className={`flex w-full items-center justify-between gap-3 border-b-2 border-ink px-2 py-3 text-left transition-colors ${selected ? 'bg-signal' : 'hover:bg-paper-2'}`}
+                >
+                  <span className="font-bold">{d.label}</span>
+                  <span className="sign-wide text-[11px] text-muted">{d.role} →</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       </div>
 
-      <p className="mt-6 text-center text-sm text-muted">
+      <p className="mt-8 text-sm text-muted">
         Pas encore de compte ?{' '}
-        <Link to={`/inscription${next ? `?next=${encodeURIComponent(next)}` : ''}`} className="font-semibold text-brand">
+        <Link to={`/inscription${next ? `?next=${encodeURIComponent(next)}` : ''}`} className="u-link font-bold text-ink">
           Créer un compte
         </Link>
       </p>
@@ -120,7 +132,7 @@ export function Register() {
   }
 
   return (
-    <AuthFrame title="Créer un compte" subtitle="Gratuit, pour signaler et suivre les problèmes de votre ville.">
+    <AuthFrame title="Nouveau compte" subtitle="Gratuit, pour signaler et suivre les problèmes de votre ville.">
       <form onSubmit={submit} className="flex flex-col gap-4">
         {error && <ErrorNote>{error}</ErrorNote>}
         <Field label="Prénom et nom" htmlFor="name" hint="Publiquement, seuls votre prénom et l’initiale de votre nom apparaissent.">
@@ -136,9 +148,9 @@ export function Register() {
           Créer mon compte
         </Button>
       </form>
-      <p className="mt-6 text-center text-sm text-muted">
+      <p className="mt-8 text-sm text-muted">
         Déjà inscrit ?{' '}
-        <Link to="/connexion" className="font-semibold text-brand">
+        <Link to="/connexion" className="u-link font-bold text-ink">
           Se connecter
         </Link>
       </p>

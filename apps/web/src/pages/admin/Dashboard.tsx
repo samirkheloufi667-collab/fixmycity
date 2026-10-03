@@ -1,11 +1,14 @@
-import { Clock, Inbox, TriangleAlert, Wrench } from 'lucide-react';
+import { useRef } from 'react';
 import { Link } from 'react-router';
-import CountUp from '@/components/reactbits/CountUp';
-import { Card, ErrorNote, PageHeader, Spinner, StatusBadge } from '@/components/ui/primitives';
+import { gsap, prefersReducedMotion, useGSAP } from '@/components/motion/gsap';
+import { SplitFlap } from '@/components/motion/SplitFlap';
+import { buttonClass, Card, ErrorNote, PageHeader, Spinner, StatusBadge } from '@/components/ui/primitives';
 import { useAuth } from '@/lib/auth';
-import { ALL_STATUSES, formatDays, ROLE_LABEL, STATUS_COLOR, STATUS_LABEL, timeAgo } from '@/lib/format';
+import { ALL_STATUSES, categoryCode, formatDays, inkOn, ROLE_LABEL, STATUS_COLOR, STATUS_LABEL, timeAgo } from '@/lib/format';
 import type { AdminStats } from '@/lib/types';
 import { useApi } from '@/lib/use-api';
+
+const pad = (n: number) => String(n).padStart(3, '0');
 
 export default function Dashboard() {
   const { me } = useAuth();
@@ -16,56 +19,48 @@ export default function Dashboard() {
   const s = stats.data;
   const mine = s.workload.find((w) => w.id === me?.id);
 
-  const cards = [
-    { label: 'Signalements ouverts', value: s.open, icon: Inbox, color: 'var(--color-brand)' },
-    { label: 'Nouveaux à examiner', value: s.counts.NEW, icon: TriangleAlert, color: STATUS_COLOR.NEW },
-    { label: 'Interventions en cours', value: s.counts.IN_PROGRESS, icon: Wrench, color: STATUS_COLOR.IN_PROGRESS },
+  const board = [
+    { label: 'Ouverts', value: pad(s.open) },
+    { label: 'Nouveaux à examiner', value: pad(s.counts.NEW) },
+    { label: 'Interventions en cours', value: pad(s.counts.IN_PROGRESS) },
+    { label: 'Délai médian', value: formatDays(s.medianResolutionDays).toUpperCase().replace(/\s/g, '') },
   ];
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader
         eyebrow={ROLE_LABEL[me!.role]}
         title="Tableau de bord"
         subtitle={mine ? `Vous suivez ${mine.open} signalement(s) ouvert(s).` : 'Vue d’ensemble des signalements de la ville.'}
         actions={
-          <Link to="/admin/file?assignee=none&status=NEW" className="inline-flex h-10 items-center rounded-xl bg-brand px-4 text-sm font-semibold text-white hover:bg-brand-strong">
-            Traiter les nouveaux
+          <Link to="/admin/file?assignee=none&status=NEW" className={buttonClass('accent')}>
+            Traiter les nouveaux →
           </Link>
         }
       />
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {cards.map(({ label, value, icon: Icon, color }) => (
-          <Card key={label} className="p-5">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted">{label}</p>
-              <Icon className="size-4" style={{ color }} />
-            </div>
-            <p className="mt-2 font-display text-4xl font-bold" style={{ color }}>
-              <CountUp to={value} duration={0.9} />
-            </p>
-          </Card>
-        ))}
-        <Card className="p-5">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted">Délai médian de résolution</p>
-            <Clock className="size-4 text-st-resolved" />
+      {/* Tableau d'affichage, comme dans une gare. */}
+      <dl className="grid grid-cols-2 border-4 border-ink bg-ink text-paper lg:grid-cols-4">
+        {board.map((b, i) => (
+          <div key={b.label} className={`p-4 sm:p-5 ${i % 2 ? 'border-l-2' : ''} ${i > 1 ? 'border-t-2 lg:border-t-0' : ''} ${i > 0 ? 'lg:border-l-2' : ''} border-paper/20`}>
+            <dt className="sign-wide text-[11px] text-paper/60">{b.label}</dt>
+            <dd className="mt-2">
+              <SplitFlap value={b.value} className="sign text-5xl sm:text-6xl" cellClassName="border border-paper/15 py-1" />
+            </dd>
           </div>
-          <p className="mt-2 font-display text-4xl font-bold text-st-resolved">{formatDays(s.medianResolutionDays)}</p>
-        </Card>
-      </div>
+        ))}
+      </dl>
 
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <Card className="p-5 sm:p-6">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="font-display text-lg font-semibold">Reçus et résolus, par semaine</h2>
-            <div className="flex gap-4 text-xs text-muted">
+          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-ink pb-3">
+            <h2 className="sign text-3xl">Reçus et résolus, par semaine</h2>
+            <div className="sign-wide flex gap-4 text-[11px]">
               <span className="flex items-center gap-1.5">
-                <span className="size-2.5 rounded-sm bg-st-new" /> Reçus
+                <span className="size-3 bg-st-new" /> Reçus
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="size-2.5 rounded-sm bg-st-resolved" /> Résolus
+                <span className="size-3 bg-st-resolved" /> Résolus
               </span>
             </div>
           </div>
@@ -73,20 +68,25 @@ export default function Dashboard() {
         </Card>
 
         <Card className="p-5 sm:p-6">
-          <h2 className="font-display text-lg font-semibold">Ouverts par catégorie</h2>
-          <ul className="mt-5 flex flex-col gap-3.5">
+          <h2 className="sign border-b-2 border-ink pb-3 text-3xl">Ouverts par catégorie</h2>
+          <ul className="mt-4 flex flex-col gap-3">
             {s.openByCategory.map((c) => {
               const max = Math.max(1, ...s.openByCategory.map((x) => x.open));
               return (
                 <li key={c.id}>
-                  <Link to={`/admin/file?category=${c.slug}`} className="group block">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-medium group-hover:text-brand">{c.name}</span>
-                      <span className="font-semibold tabular-nums">{c.open}</span>
-                    </div>
-                    <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-paper-2">
-                      <div className="h-full rounded-full transition-all" style={{ width: `${(c.open / max) * 100}%`, background: c.color }} />
-                    </div>
+                  <Link to={`/admin/file?category=${c.slug}`} className="group flex items-center gap-3">
+                    <span className="flex h-7 w-9 shrink-0 items-center justify-center border-2 border-ink text-[12px] font-extrabold [font-stretch:70%]" style={{ background: c.color, color: inkOn(c.color) }}>
+                      {categoryCode(c)}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex justify-between text-sm font-bold">
+                        <span className="group-hover:underline">{c.name}</span>
+                        <span className="tnum">{c.open}</span>
+                      </span>
+                      <span className="mt-1 block h-2.5 border-2 border-ink bg-paper">
+                        <span className="block h-full" style={{ width: `${(c.open / max) * 100}%`, background: c.color }} />
+                      </span>
+                    </span>
                   </Link>
                 </li>
               );
@@ -97,13 +97,13 @@ export default function Dashboard() {
 
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <Card className="p-5 sm:p-6">
-          <h2 className="font-display text-lg font-semibold">Les plus anciens encore ouverts</h2>
-          <ul className="mt-4 divide-y divide-line">
+          <h2 className="sign border-b-2 border-ink pb-3 text-3xl">Les plus anciens encore ouverts</h2>
+          <ul className="divide-y-2 divide-line">
             {s.oldestOpen.map((r) => (
               <li key={r.id}>
-                <Link to={`/signalements/${r.id}`} className="flex flex-wrap items-center gap-3 py-3 hover:text-brand">
-                  <span className="size-2 shrink-0 rounded-full" style={{ background: r.category.color }} />
-                  <span className="min-w-0 flex-1 truncate text-sm font-semibold">{r.title}</span>
+                <Link to={`/signalements/${r.id}`} className="flex flex-wrap items-center gap-3 py-3 hover:bg-signal">
+                  <span className="size-3 shrink-0 border-2 border-ink" style={{ background: r.category.color }} />
+                  <span className="min-w-0 flex-1 truncate text-sm font-bold">{r.title}</span>
                   <StatusBadge status={r.status} />
                   <span className="w-28 text-right text-xs text-muted">{timeAgo(r.createdAt)}</span>
                 </Link>
@@ -113,24 +113,24 @@ export default function Dashboard() {
         </Card>
 
         <Card className="p-5 sm:p-6">
-          <h2 className="font-display text-lg font-semibold">Répartition par statut</h2>
-          <ul className="mt-4 flex flex-col gap-2.5">
+          <h2 className="sign border-b-2 border-ink pb-3 text-3xl">Par statut</h2>
+          <ul className="mt-3 flex flex-col gap-2">
             {ALL_STATUSES.map((st) => (
               <li key={st} className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2">
-                  <span className="size-2.5 rounded-full" style={{ background: STATUS_COLOR[st] }} />
+                <span className="sign-wide flex items-center gap-2 text-[12px]" style={{ color: STATUS_COLOR[st] }}>
+                  <span className="size-3 rounded-full border-2 border-current" />
                   {STATUS_LABEL[st]}
                 </span>
-                <span className="font-semibold tabular-nums">{s.counts[st]}</span>
+                <span className="tnum font-bold">{s.counts[st]}</span>
               </li>
             ))}
           </ul>
-          <h3 className="mt-6 text-sm font-semibold text-muted">Charge des agents</h3>
+          <h3 className="sign mt-6 border-b-2 border-ink pb-2 text-2xl">Charge des agents</h3>
           <ul className="mt-2 flex flex-col gap-2">
             {s.workload.map((a) => (
               <li key={a.id} className="flex items-center justify-between text-sm">
-                <span>{a.name}</span>
-                <span className="rounded-full bg-paper-2 px-2.5 py-0.5 text-xs font-semibold">{a.open} ouvert(s)</span>
+                <span className="font-bold">{a.name}</span>
+                <span className="sign-wide tnum bg-ink px-2 py-0.5 text-[11px] text-paper">{a.open} ouvert(s)</span>
               </li>
             ))}
           </ul>
@@ -140,18 +140,27 @@ export default function Dashboard() {
   );
 }
 
-/** Histogramme en SVG : pas de bibliothèque de graphiques pour huit paires de barres. */
+/** Histogramme en SVG : pas de bibliothèque de graphiques pour huit paires de barres. Les barres montent à l'affichage. */
 function WeeklyChart({ weeks }: { weeks: AdminStats['weeks'] }) {
+  const ref = useRef<SVGSVGElement>(null);
+  useGSAP(
+    () => {
+      if (prefersReducedMotion()) return;
+      gsap.from('rect', { scaleY: 0, transformOrigin: '50% 100%', duration: 0.9, stagger: 0.04, ease: 'expo.out' });
+    },
+    { scope: ref, dependencies: [weeks.length] },
+  );
   const max = Math.max(1, ...weeks.flatMap((w) => [w.created, w.resolved]));
   const H = 180;
   const W = 560;
   const slot = W / weeks.length;
-  const bar = Math.min(18, slot / 3);
+  const bar = Math.min(20, slot / 3);
   return (
-    <svg viewBox={`0 0 ${W} ${H + 28}`} className="mt-5 w-full" role="img" aria-label="Signalements reçus et résolus sur huit semaines">
+    <svg ref={ref} viewBox={`0 0 ${W} ${H + 28}`} className="mt-5 w-full" role="img" aria-label="Signalements reçus et résolus sur huit semaines">
       {[0.25, 0.5, 0.75, 1].map((f) => (
-        <line key={f} x1={0} x2={W} y1={H - f * H} y2={H - f * H} stroke="var(--color-line)" strokeDasharray="3 4" />
+        <line key={f} x1={0} x2={W} y1={H - f * H} y2={H - f * H} stroke="var(--color-line)" strokeWidth={1} />
       ))}
+      <line x1={0} x2={W} y1={H} y2={H} stroke="var(--color-ink)" strokeWidth={3} />
       {weeks.map((w, i) => {
         const x = i * slot + slot / 2;
         const hc = (w.created / max) * H;
@@ -159,13 +168,13 @@ function WeeklyChart({ weeks }: { weeks: AdminStats['weeks'] }) {
         const label = new Date(w.start).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
         return (
           <g key={w.start}>
-            <rect x={x - bar - 2} y={H - hc} width={bar} height={hc} rx={4} fill="var(--color-st-new)">
+            <rect x={x - bar - 2} y={H - hc} width={bar} height={hc} fill="var(--color-st-new)">
               <title>{`Semaine du ${label} : ${w.created} reçu(s)`}</title>
             </rect>
-            <rect x={x + 2} y={H - hr} width={bar} height={hr} rx={4} fill="var(--color-st-resolved)">
+            <rect x={x + 2} y={H - hr} width={bar} height={hr} fill="var(--color-st-resolved)">
               <title>{`Semaine du ${label} : ${w.resolved} résolu(s)`}</title>
             </rect>
-            <text x={x} y={H + 18} textAnchor="middle" fontSize={11} fill="var(--color-muted)">
+            <text x={x} y={H + 20} textAnchor="middle" fontSize={11} fontWeight={700} fill="var(--color-ink)">
               {label}
             </text>
           </g>

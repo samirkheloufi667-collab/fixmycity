@@ -1,4 +1,3 @@
-import { Megaphone, Plus } from 'lucide-react';
 import { Link, Navigate } from 'react-router';
 import { ReportCard } from '@/components/ReportBits';
 import { buttonClass, EmptyState, ErrorNote, PageHeader, Spinner } from '@/components/ui/primitives';
@@ -26,7 +25,7 @@ export default function MyReports() {
         subtitle={created.length ? `${created.length} envoyé(s), dont ${open} en cours de traitement.` : undefined}
         actions={
           <Link to="/signaler" className={buttonClass('accent')}>
-            <Plus className="size-4" /> Nouveau signalement
+            Nouveau signalement ↗
           </Link>
         }
       />
@@ -34,8 +33,7 @@ export default function MyReports() {
 
       {created.length === 0 ? (
         <EmptyState
-          icon={<Megaphone className="size-5" />}
-          title="Aucun signalement pour l’instant"
+                    title="Rien de signalé pour l’instant."
           text="Un trottoir abîmé, un lampadaire éteint ? Signalez-le : vous suivrez ici chaque étape de sa résolution."
           action={
             <Link to="/signaler" className={buttonClass('accent')}>
@@ -53,7 +51,7 @@ export default function MyReports() {
 
       {supported.length > 0 && (
         <section>
-          <h2 className="font-display text-xl font-semibold">Signalements que je soutiens</h2>
+          <h2 className="sign border-b-4 border-ink pb-3 text-4xl">Signalements que je soutiens</h2>
           <p className="mt-1 text-sm text-muted">Vous avez indiqué être concerné par ces problèmes.</p>
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             {supported.map((r) => (

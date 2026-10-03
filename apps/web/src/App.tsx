@@ -1,4 +1,3 @@
-import { MapPinOff } from 'lucide-react';
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Link, Route, Routes } from 'react-router';
 import { Layout } from '@/components/Layout';
@@ -23,8 +22,7 @@ const UsersPage = lazy(() => import('@/pages/admin/UsersPage'));
 function NotFound() {
   return (
     <EmptyState
-      icon={<MapPinOff className="size-5" />}
-      title="Page introuvable"
+            title="Page introuvable."
       text="Cette adresse ne correspond à aucune page de FixMyCity."
       action={
         <Link to="/" className={buttonClass('secondary')}>

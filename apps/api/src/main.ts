@@ -28,6 +28,8 @@ export function configure(app: import('@nestjs/common').INestApplication) {
   // Production : l'API sert aussi l'interface compilée (application monopage).
   const webDist = process.env.WEB_DIST;
   if (webDist) {
+    // Les fichiers de /assets ont une empreinte dans leur nom (Vite) : gardés un an.
+    app.use('/assets', express.static(join(webDist, 'assets'), { immutable: true, maxAge: '1y' }));
     app.use(express.static(webDist, { index: false, maxAge: '1h' }));
     app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
       if (req.method !== 'GET' || req.path.startsWith('/api')) return next();

@@ -1,4 +1,3 @@
-import { ChevronLeft, ChevronRight, Inbox, Search, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { Button, CategoryMark, EmptyState, ErrorNote, Input, PageHeader, Select, Spinner, StatusBadge } from '@/components/ui/primitives';
@@ -66,20 +65,14 @@ export default function Queue() {
               type="button"
               onClick={() => update({ status: f.value })}
               aria-pressed={status === f.value}
-              className={cx(
-                'shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] font-semibold transition-colors',
-                status === f.value ? 'border-ink bg-ink text-white' : 'border-line-strong bg-card hover:border-ink/40',
-              )}
+              className={cx('sign-wide shrink-0 border-2 border-ink px-3.5 py-1.5 text-[12px] transition-colors', status === f.value ? 'bg-ink text-paper' : 'bg-card hover:bg-paper-2')}
             >
               {f.label}
             </button>
           ))}
         </div>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="relative">
-            <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-faint" />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Titre ou adresse…" className="pl-10" aria-label="Rechercher" />
-          </div>
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher : titre ou adresse…" aria-label="Rechercher" />
           <Select value={assignee} onChange={(e) => update({ assignee: e.target.value })} aria-label="Responsable">
             <option value="">Tous les responsables</option>
             <option value="me">Moi ({me?.name})</option>
@@ -110,30 +103,28 @@ export default function Queue() {
 
       {queue.error && <ErrorNote>{queue.error}</ErrorNote>}
       {queue.loading && !queue.data && <Spinner />}
-      {queue.data?.items.length === 0 && <EmptyState icon={<Inbox className="size-5" />} title="Rien dans cette file" text="Aucun signalement ne correspond à ces filtres." />}
+      {queue.data?.items.length === 0 && <EmptyState title="File vide." text="Aucun signalement ne correspond à ces filtres." />}
 
       {queue.data && queue.data.items.length > 0 && (
         <>
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col border-t-2 border-ink">
             {queue.data.items.map((r) => (
               <li key={r.id}>
                 <Link
                   to={`/signalements/${r.id}`}
-                  className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-line bg-card p-3.5 transition-colors hover:border-line-strong sm:flex-nowrap"
-                  style={{ boxShadow: `inset 3px 0 0 ${STATUS_COLOR[r.status]}` }}
+                  className="flex flex-wrap items-center gap-x-4 gap-y-2 border-x-2 border-b-2 border-ink bg-card p-3 transition-colors hover:bg-signal sm:flex-nowrap"
+                  style={{ boxShadow: `inset 6px 0 0 ${STATUS_COLOR[r.status]}` }}
                 >
-                  <CategoryMark icon={r.category.icon} color={r.category.color} size={40} />
+                  <CategoryMark category={r.category} size={40} />
                   <div className="min-w-0 flex-1 basis-48">
-                    <p className="truncate font-semibold">{r.title}</p>
+                    <p className="truncate font-bold">{r.title}</p>
                     <p className="truncate text-[13px] text-muted">
                       {r.category.name}
                       {r.address ? ` · ${r.address}` : ''}
                     </p>
                   </div>
                   <StatusBadge status={r.status} />
-                  <span className="flex w-14 items-center gap-1 text-sm text-muted">
-                    <Users className="size-3.5" /> {r.supportCount}
-                  </span>
+                  <span className="tnum w-14 text-sm font-bold">{r.supportCount} conc.</span>
                   <span className="w-32 truncate text-sm text-muted">{r.assignee?.name ?? <em className="text-faint">Non attribué</em>}</span>
                   <span className="w-28 text-right text-xs text-faint">{timeAgo(r.createdAt)}</span>
                 </Link>
@@ -146,10 +137,10 @@ export default function Queue() {
             </span>
             <div className="flex gap-2">
               <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => update({ page: String(page - 1) })}>
-                <ChevronLeft className="size-4" /> Précédente
+                ← Précédente
               </Button>
               <Button variant="secondary" size="sm" disabled={page >= queue.data.pages} onClick={() => update({ page: String(page + 1) })}>
-                Suivante <ChevronRight className="size-4" />
+                Suivante →
               </Button>
             </div>
           </div>

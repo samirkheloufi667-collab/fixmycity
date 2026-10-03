@@ -1,11 +1,10 @@
 import type { LatLngBounds } from 'leaflet';
-import { List, Map as MapIcon, Plus, Users } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { ReportsMap } from '@/components/map/ReportsMap';
-import { buttonClass, CategoryIcon, ErrorNote, Spinner, StatusBadge } from '@/components/ui/primitives';
+import { buttonClass, CategoryMark, ErrorNote, Spinner, StatusBadge } from '@/components/ui/primitives';
 import { api, errorMessage } from '@/lib/api';
-import { cx, OPEN_STATUSES, plural, timeAgo } from '@/lib/format';
+import { categoryCode, cx, inkOn, OPEN_STATUSES, timeAgo } from '@/lib/format';
 import { useReference } from '@/lib/reference';
 import type { MapPoint } from '@/lib/types';
 
@@ -57,8 +56,7 @@ export default function MapPage() {
     listRef.current?.querySelector(`[data-id="${selectedId}"]`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }, [selectedId]);
 
-  const toggleCategory = (slug: string) =>
-    setSelectedCategories((list) => (list.includes(slug) ? list.filter((s) => s !== slug) : [...list, slug]));
+  const toggleCategory = (slug: string) => setSelectedCategories((list) => (list.includes(slug) ? list.filter((s) => s !== slug) : [...list, slug]));
 
   const counts = useMemo(() => {
     const byCategory = new Map<string, number>();
@@ -66,22 +64,19 @@ export default function MapPage() {
     return byCategory;
   }, [points]);
 
-  if (!city) return <Spinner label="Chargement de la carte…" />;
+  if (!city) return <Spinner label="Chargement de la carte" />;
 
   const filters = (
     <div className="flex flex-col gap-3">
-      <div className="inline-flex rounded-xl bg-paper-2 p-1" role="radiogroup" aria-label="Statut">
-        {SCOPES.map((s) => (
+      <div className="grid grid-cols-3 border-2 border-ink" role="radiogroup" aria-label="Statut">
+        {SCOPES.map((s, i) => (
           <button
             key={s.value}
             type="button"
             role="radio"
             aria-checked={scope === s.value}
             onClick={() => setScope(s.value)}
-            className={cx(
-              'flex-1 rounded-lg px-3 py-1.5 text-[13px] font-semibold transition-colors',
-              scope === s.value ? 'bg-card text-ink shadow-sm' : 'text-muted hover:text-ink',
-            )}
+            className={cx('sign-wide py-1.5 text-[12px] transition-colors', i > 0 && 'border-l-2 border-ink', scope === s.value ? 'bg-ink text-paper' : 'bg-card hover:bg-paper-2')}
           >
             {s.label}
           </button>
@@ -96,15 +91,14 @@ export default function MapPage() {
               type="button"
               onClick={() => toggleCategory(c.slug)}
               aria-pressed={active}
-              className={cx(
-                'flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-semibold transition-colors',
-                active ? 'border-transparent text-white' : 'border-line-strong bg-card text-ink hover:border-ink/30',
-              )}
-              style={active ? { background: c.color } : undefined}
+              className={cx('flex shrink-0 items-center border-2 border-ink text-[12px] font-bold transition-colors', active ? '' : 'bg-card hover:bg-paper-2')}
+              style={active ? { background: c.color, color: inkOn(c.color) } : undefined}
             >
-              <CategoryIcon icon={c.icon} className="size-3.5" style={active ? undefined : { color: c.color }} />
-              {c.name}
-              {!active && counts.get(c.slug) ? <span className="text-faint">{counts.get(c.slug)}</span> : null}
+              <span className="flex h-7 w-8 items-center justify-center border-r-2 border-ink font-extrabold [font-stretch:70%]" style={{ background: c.color, color: inkOn(c.color) }}>
+                {categoryCode(c)}
+              </span>
+              <span className="px-2">{c.name}</span>
+              {counts.get(c.slug) ? <span className="tnum pr-2 opacity-60">{counts.get(c.slug)}</span> : null}
             </button>
           );
         })}
@@ -113,14 +107,10 @@ export default function MapPage() {
   );
 
   const list = (
-    <ul ref={listRef} className="flex flex-col gap-2">
-      {points.length === 0 && (
-        <li className="rounded-2xl border border-dashed border-line-strong px-4 py-8 text-center text-sm text-muted">
-          Aucun signalement dans cette zone avec ces filtres.
-        </li>
-      )}
+    <ul ref={listRef} className="flex flex-col">
+      {points.length === 0 && <li className="border-2 border-dashed border-ink px-4 py-8 text-center text-sm text-muted">Aucun signalement dans cette zone avec ces filtres.</li>}
       {points.map((p) => (
-        <li key={p.id} data-id={p.id}>
+        <li key={p.id} data-id={p.id} className="border-b-2 border-ink first:border-t-2">
           <button
             type="button"
             onClick={() => {
@@ -128,21 +118,14 @@ export default function MapPage() {
               setFlyTo({ latitude: p.latitude, longitude: p.longitude, key: Date.now() });
               setMobileView('map');
             }}
-            className={cx(
-              'flex w-full gap-3 rounded-2xl border p-3 text-left transition-colors',
-              p.id === selectedId ? 'border-brand bg-brand-soft/50' : 'border-line bg-card hover:border-line-strong',
-            )}
+            className={cx('flex w-full gap-3 px-3 py-3 text-left transition-colors', p.id === selectedId ? 'bg-signal' : 'bg-card hover:bg-paper-2')}
           >
-            <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl text-white" style={{ background: p.category.color }}>
-              <CategoryIcon icon={p.category.icon} className="size-4" />
-            </span>
+            <CategoryMark category={p.category} size={36} />
             <span className="min-w-0 flex-1">
-              <span className="line-clamp-2 text-sm font-semibold leading-snug">{p.title}</span>
-              <span className="mt-1.5 flex flex-wrap items-center gap-2">
+              <span className="line-clamp-2 text-sm leading-snug font-bold">{p.title}</span>
+              <span className="mt-1.5 flex flex-wrap items-center gap-3">
                 <StatusBadge status={p.status} />
-                <span className="flex items-center gap-1 text-xs text-muted">
-                  <Users className="size-3" /> {p.supportCount}
-                </span>
+                <span className="tnum text-xs font-bold">{p.supportCount} conc.</span>
                 <span className="text-xs text-faint">{timeAgo(p.createdAt)}</span>
               </span>
             </span>
@@ -154,16 +137,11 @@ export default function MapPage() {
 
   return (
     <div className="flex h-full">
-      <aside
-        className={cx(
-          'flex w-full flex-col border-r border-line bg-paper lg:flex lg:w-[400px] lg:shrink-0',
-          mobileView === 'list' ? 'flex' : 'hidden',
-        )}
-      >
-        <div className="border-b border-line p-4">
-          <div className="mb-3 flex items-baseline justify-between">
-            <h1 className="font-display text-xl font-bold">Signalements</h1>
-            <span className="text-sm text-muted">{plural(points.length, 'dans la zone', 'dans la zone')}</span>
+      <aside className={cx('flex w-full flex-col border-r-4 border-ink bg-paper lg:flex lg:w-[420px] lg:shrink-0', mobileView === 'list' ? 'flex' : 'hidden')}>
+        <div className="border-b-4 border-ink p-4">
+          <div className="mb-4 flex items-end justify-between">
+            <h1 className="sign text-5xl">Signalements</h1>
+            <span className="sign-wide tnum bg-ink px-2 py-0.5 text-[13px] text-paper">{points.length}</span>
           </div>
           {filters}
         </div>
@@ -174,23 +152,13 @@ export default function MapPage() {
       </aside>
 
       <div className={cx('relative min-w-0 flex-1', mobileView === 'map' ? 'block' : 'hidden lg:block')}>
-        <ReportsMap
-          city={city}
-          points={points}
-          selectedId={selectedId}
-          onSelect={setSelectedId}
-          onBoundsChange={onBoundsChange}
-          flyTo={flyTo}
-        />
+        <ReportsMap city={city} points={points} selectedId={selectedId} onSelect={setSelectedId} onBoundsChange={onBoundsChange} flyTo={flyTo} />
         {/* Filtres flottants sur mobile, au-dessus de la carte. */}
         <div className="pointer-events-none absolute inset-x-0 top-0 z-[500] p-3 lg:hidden">
-          <div className="pointer-events-auto rounded-2xl border border-line bg-card/95 p-2.5 shadow-card backdrop-blur">{filters}</div>
+          <div className="pointer-events-auto border-2 border-ink bg-paper p-2.5">{filters}</div>
         </div>
-        <Link
-          to="/signaler"
-          className={buttonClass('accent', 'lg', 'absolute right-4 bottom-20 z-[500] shadow-xl sm:hidden lg:bottom-6 lg:inline-flex')}
-        >
-          <Plus className="size-4" /> Signaler ici
+        <Link to="/signaler" className={buttonClass('accent', 'lg', 'absolute right-4 bottom-20 z-[500] sm:hidden lg:bottom-6 lg:inline-flex')}>
+          Signaler ici ↗
         </Link>
       </div>
 
@@ -198,17 +166,9 @@ export default function MapPage() {
       <button
         type="button"
         onClick={() => setMobileView((v) => (v === 'map' ? 'list' : 'map'))}
-        className="fixed bottom-5 left-1/2 z-[1000] flex -translate-x-1/2 items-center gap-2 rounded-full bg-ink px-5 py-3 text-sm font-semibold text-white shadow-xl lg:hidden"
+        className="sign-wide fixed bottom-5 left-1/2 z-[1000] -translate-x-1/2 border-2 border-ink bg-ink px-5 py-3 text-[13px] text-paper lg:hidden"
       >
-        {mobileView === 'map' ? (
-          <>
-            <List className="size-4" /> Liste ({points.length})
-          </>
-        ) : (
-          <>
-            <MapIcon className="size-4" /> Carte
-          </>
-        )}
+        {mobileView === 'map' ? `Liste (${points.length})` : 'Carte'}
       </button>
     </div>
   );

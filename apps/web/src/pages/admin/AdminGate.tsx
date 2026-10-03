@@ -1,4 +1,3 @@
-import { ShieldCheck } from 'lucide-react';
 import { Link, Navigate, NavLink, Outlet } from 'react-router';
 import { buttonClass, EmptyState, Spinner } from '@/components/ui/primitives';
 import { useAuth } from '@/lib/auth';
@@ -6,8 +5,8 @@ import { cx, isStaff } from '@/lib/format';
 
 const tab = ({ isActive }: { isActive: boolean }) =>
   cx(
-    'rounded-xl px-3.5 py-2 text-sm font-semibold whitespace-nowrap transition-colors',
-    isActive ? 'bg-ink text-white' : 'text-muted hover:bg-paper-2 hover:text-ink',
+    'sign-wide border-2 border-ink px-3.5 py-2 text-[12px] whitespace-nowrap transition-colors',
+    isActive ? 'bg-ink text-paper' : 'bg-card text-ink hover:bg-paper-2',
   );
 
 /**
@@ -21,8 +20,7 @@ export default function AdminGate() {
   if (!isStaff(me.role)) {
     return (
       <EmptyState
-        icon={<ShieldCheck className="size-5" />}
-        title="Espace réservé aux services de la ville"
+                title="Réservé aux services de la ville."
         text="Cette partie sert aux agents qui traitent les signalements. Essayez le compte de démonstration « Agent » pour la découvrir."
         action={
           <Link to="/carte" className={buttonClass('secondary')}>

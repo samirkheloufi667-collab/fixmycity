@@ -2,7 +2,7 @@ import { MapContainer, Marker, TileLayer } from 'react-leaflet';
 import { pinIcon, TILE_ATTRIBUTION, TILE_URL } from './pins';
 
 /** Petite carte fixe qui situe un signalement sur sa fiche. */
-export function MiniMap({ latitude, longitude, icon, color }: { latitude: number; longitude: number; icon: string; color: string }) {
+export function MiniMap({ latitude, longitude, category }: { latitude: number; longitude: number; category: { slug?: string; name: string; color: string } }) {
   return (
     <MapContainer
       center={[latitude, longitude]}
@@ -16,7 +16,7 @@ export function MiniMap({ latitude, longitude, icon, color }: { latitude: number
       keyboard={false}
     >
       <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
-      <Marker position={[latitude, longitude]} icon={pinIcon(icon, color, { active: true })} interactive={false} />
+      <Marker position={[latitude, longitude]} icon={pinIcon(category, { active: true })} interactive={false} />
     </MapContainer>
   );
 }

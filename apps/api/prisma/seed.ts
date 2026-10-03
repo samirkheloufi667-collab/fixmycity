@@ -33,12 +33,12 @@ function around(meters: number) {
 }
 
 const CATEGORIES = [
-  { slug: 'voirie', name: 'Voirie', color: '#E0703A', icon: 'construction' },
-  { slug: 'eclairage', name: 'Éclairage public', color: '#E3B23C', icon: 'lightbulb' },
-  { slug: 'proprete', name: 'Propreté', color: '#3E8E6B', icon: 'trash-2' },
-  { slug: 'espaces-verts', name: 'Espaces verts', color: '#6BA547', icon: 'trees' },
-  { slug: 'mobilier', name: 'Mobilier urbain', color: '#5B7FC7', icon: 'armchair' },
-  { slug: 'signalisation', name: 'Signalisation', color: '#C0506B', icon: 'signpost' },
+  { slug: 'voirie', name: 'Voirie', color: '#E2571B', icon: 'construction' },
+  { slug: 'eclairage', name: 'Éclairage public', color: '#F2B705', icon: 'lightbulb' },
+  { slug: 'proprete', name: 'Propreté', color: '#1B7F4C', icon: 'trash-2' },
+  { slug: 'espaces-verts', name: 'Espaces verts', color: '#5A9B2E', icon: 'trees' },
+  { slug: 'mobilier', name: 'Mobilier urbain', color: '#2457C5', icon: 'armchair' },
+  { slug: 'signalisation', name: 'Signalisation', color: '#C42850', icon: 'signpost' },
 ];
 
 const STREETS = [
@@ -120,20 +120,20 @@ async function main() {
     prisma.user.create({ data: { email, name, role, passwordHash } });
 
   const lea = await mk('demo@fixmycity.dev', 'Léa Martin', 'CITIZEN');
-  const karim = await mk('agent@fixmycity.dev', 'Karim Benali', 'AGENT');
+  const thomas = await mk('agent@fixmycity.dev', 'Thomas Garnier', 'AGENT');
   const sofia = await mk('agent2@fixmycity.dev', 'Sofia Rossi', 'AGENT');
-  const nadia = await mk('admin@fixmycity.dev', 'Nadia Haddad', 'ADMIN');
+  const claire = await mk('admin@fixmycity.dev', 'Claire Lambert', 'ADMIN');
   const others = await Promise.all(
     [
       ['hugo@fixmycity.dev', 'Hugo Lefèvre'],
-      ['ines@fixmycity.dev', 'Inès Moreau'],
-      ['yanis@fixmycity.dev', 'Yanis Cherif'],
+      ['manon@fixmycity.dev', 'Manon Moreau'],
+      ['lucas@fixmycity.dev', 'Lucas Petit'],
       ['chloe@fixmycity.dev', 'Chloé Dubois'],
-      ['omar@fixmycity.dev', 'Omar Diallo'],
+      ['julien@fixmycity.dev', 'Julien Roux'],
     ].map(([email, name]) => mk(email, name, 'CITIZEN')),
   );
   const citizens = [lea, ...others];
-  const agents = [karim, sofia];
+  const agents = [thomas, sofia];
 
   const categories = await Promise.all(CATEGORIES.map((data) => prisma.category.create({ data })));
 
@@ -168,9 +168,9 @@ async function main() {
 
     let resolvedAt: Date | null = null;
     if (status === 'REJECTED') {
-      step('NEW', 'REJECTED', 0.15, nadia.id, pick(REJECT_REASONS));
+      step('NEW', 'REJECTED', 0.15, claire.id, pick(REJECT_REASONS));
     } else if (status !== 'NEW') {
-      events.push({ type: 'ASSIGNED', message: `Attribué à ${assignee!.name}`, actorId: nadia.id, createdAt: at(0.05) });
+      events.push({ type: 'ASSIGNED', message: `Attribué à ${assignee!.name}`, actorId: claire.id, createdAt: at(0.05) });
       step('NEW', 'ACKNOWLEDGED', 0.1, assignee!.id, 'Signalement vérifié sur place.');
       if (status === 'IN_PROGRESS' || status === 'RESOLVED') {
         step('ACKNOWLEDGED', 'IN_PROGRESS', 0.35, assignee!.id, 'Intervention planifiée avec l’équipe technique.');

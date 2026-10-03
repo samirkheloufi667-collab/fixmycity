@@ -7,10 +7,10 @@ describe('publicName', () => {
   });
 
   it('garde un prénom seul tel quel', () => {
-    expect(publicName({ name: 'Nadia', role: 'CITIZEN' })).toBe('Nadia');
+    expect(publicName({ name: 'Claire', role: 'CITIZEN' })).toBe('Claire');
   });
 
   it("affiche le nom complet d'un agent", () => {
-    expect(publicName({ name: 'Karim Benali', role: 'AGENT' })).toBe('Karim Benali');
+    expect(publicName({ name: 'Thomas Garnier', role: 'AGENT' })).toBe('Thomas Garnier');
   });
 });

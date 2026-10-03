@@ -1,4 +1,3 @@
-import { X } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
 /**
@@ -36,19 +35,14 @@ export function Modal({
         // Un clic sur le fond (hors du contenu) ferme la fenêtre.
         if (e.target === ref.current) onClose();
       }}
-      className={`m-auto z-[3000] w-[calc(100%-2rem)] rounded-3xl border border-line bg-card p-0 text-ink shadow-2xl shadow-ink/20 backdrop:bg-ink/40 backdrop:backdrop-blur-sm ${wide ? 'max-w-2xl' : 'max-w-lg'}`}
+      className={`sheet z-[3000] m-auto w-[calc(100%-2rem)] border-4 border-ink bg-card p-0 text-ink shadow-[10px_10px_0_var(--color-ink)] ${wide ? 'max-w-2xl' : 'max-w-lg'}`}
     >
       {open && (
         <div className="flex max-h-[85vh] flex-col">
-          <div className="flex items-center justify-between border-b border-line px-5 py-4">
-            <h2 className="font-display text-lg font-semibold">{title}</h2>
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-md p-1 text-muted transition-colors hover:bg-paper-2 hover:text-ink"
-              aria-label="Fermer"
-            >
-              <X className="size-4" />
+          <div className="flex items-center justify-between gap-4 border-b-4 border-ink bg-signal px-5 py-3">
+            <h2 className="sign text-3xl">{title}</h2>
+            <button type="button" onClick={onClose} className="sign-wide border-2 border-ink bg-card px-2 py-1 text-[11px] hover:bg-ink hover:text-paper" aria-label="Fermer">
+              Fermer ✕
             </button>
           </div>
           <div className="overflow-y-auto p-5">{children}</div>
