@@ -30,8 +30,9 @@ export function HeroMap({ city }: { city: City }) {
     return () => cancelAnimationFrame(id);
   }, [points]);
 
+  // « isolate » : les calques de Leaflet (z-index 400 et plus) restent sous le contenu de la page.
   return (
-    <div ref={box} className="absolute inset-0" aria-hidden>
+    <div ref={box} className="absolute inset-0 isolate z-0" aria-hidden>
       <MapContainer
         center={[city.latitude, city.longitude]}
         zoom={city.zoom + 0.4}
