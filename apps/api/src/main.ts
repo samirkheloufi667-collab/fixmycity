@@ -16,6 +16,10 @@ export function configure(app: import('@nestjs/common').INestApplication) {
     helmet({
       // En développement, l'interface est servie depuis une autre origine et affiche les photos de l'API.
       crossOriginResourcePolicy: { policy: 'cross-origin' },
+      // Les serveurs de tuiles d'OpenStreetMap exigent un en-tête Referer : sans lui,
+      // ils renvoient une image « 403 Access blocked » à la place de la carte.
+      // On n'envoie que l'origine du site (jamais l'adresse de la page) aux autres domaines.
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
       contentSecurityPolicy: {
         directives: {
           // Tuiles de la carte OpenStreetMap ; tout le reste vient de la même origine.
