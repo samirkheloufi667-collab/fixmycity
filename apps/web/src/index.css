@@ -63,21 +63,24 @@ body {
   outline-offset: 2px;
 }
 
+@layer components {
 /* Titres de panneau : très étroits, très gras, en capitales. */
-.sign {
-  font-family: var(--font-display);
-  font-stretch: 62%;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  text-transform: uppercase;
-  line-height: 0.88;
+  .sign {
+    font-family: var(--font-display);
+    font-stretch: 62%;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    line-height: 0.88;
+  }
+  .sign-wide {
+    font-stretch: 75%;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
 }
-.sign-wide {
-  font-stretch: 75%;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-}
+
 .tnum {
   font-variant-numeric: tabular-nums;
 }

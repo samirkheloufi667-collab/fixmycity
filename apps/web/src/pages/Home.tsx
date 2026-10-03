@@ -102,7 +102,7 @@ export default function Home() {
           {/* Le grand panneau jaune. */}
           <div data-panel className="w-fit max-w-full border-4 border-ink bg-signal px-6 pt-6 pb-8 shadow-[10px_10px_0_var(--color-ink)] sm:px-10 sm:pt-8 sm:pb-10">
             <p className="sign-wide text-[13px]">Signalement citoyen · {city?.name ?? 'votre ville'}</p>
-            <h1 data-title className="sign mt-4 text-[22vw] sm:text-[13vw] lg:text-[10rem]">
+            <h1 data-title className="sign mt-4 text-[22vw] leading-[1.02] sm:text-[13vw] lg:text-[10rem]">
               Signalez.
               <br />
               On répare.
